@@ -13,10 +13,15 @@ public:
 
     void loadScript(QString fileName);
     void runScript();
+    QString getCommand();
+    QString getStringParam();
+    int getIntParam();
 
     void print(QString message, bool newLine = false);
     void println(QString message);
 
     QStringList script;
+    int charIndex;
+    QString line;
 };
 #endif // GAMEENGINE_H
