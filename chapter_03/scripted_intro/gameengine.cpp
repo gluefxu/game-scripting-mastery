@@ -9,7 +9,7 @@ GameEngine::GameEngine(QWidget *parent)
     charIndex = 0;
 
     println("# GameEngine");
-    loadScript("demo.cbl"); // put file in the shadow build root directory
+    loadScript(":/scripts/demo.cbl"); // put file in the shadow build root directory
     runScript();
 }
 
