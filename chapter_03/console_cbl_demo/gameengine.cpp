@@ -19,9 +19,6 @@ GameEngine::~GameEngine()
 
 void GameEngine::loadScript(QString fileName)
 {
-    println("# loadScript");
-//    println(fileName);
-
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         println("# File Open Error");
@@ -37,40 +34,31 @@ void GameEngine::loadScript(QString fileName)
 
 void GameEngine::runScript()
 {
-    println("# runScript **************************");
+    println("# **************** runScript ****************");
     for (int i = 0; i < script.size(); ++i) {
         charIndex = 0;
         line = script.at(i);
-//        print(line);
-
-//        QStringList commandLine = line.split(" ");
-//        QString command = commandLine.at(0);
-
 
         QString command = getCommand();
 
         if (command == "PrintString") {
-//            print(command + ": ");
             QString stringParam = getStringParam();
             println(stringParam);
         } else if (command == "PrintStringLoop") {
-//            print(command + ":\n");
             QString stringParam = getStringParam();
-//            println(stringParam);
             int intParam = getIntParam();
-//            println(QString::number(intParam));
             for (int j = 0; j < intParam; ++j) {
                 println(stringParam);
             }
         } else if (command == "Newline") {
             println("");
         } else if (command == "WaitForKeyPress") {
-            println("WaitForKeyPress");
+            println("!!WaitForKeyPress");
         } else {
             println("!!Error Command: " + command);
         }
     }
-    println("# runScript end ***********************");
+    println("# **************** runScript end ******************");
 }
 
 QString GameEngine::getCommand()
@@ -84,15 +72,12 @@ QString GameEngine::getCommand()
         }
         command.push_back(c);
     }
-
-//    print(command);
     return command;
 }
 
 QString GameEngine::getStringParam()
 {
     QString stringParam = "";
-
     charIndex++;
     for (int i = charIndex; i < line.size() ; i++ ) {
         charIndex++;
@@ -103,14 +88,13 @@ QString GameEngine::getStringParam()
         stringParam.push_back(c);
     }
     charIndex++;
-//    print(stringParam);
+
     return stringParam;
 }
 
 int GameEngine::getIntParam()
 {
     QString intParam = "";
-//    println(QString::number(charIndex));
     for (int i = charIndex; i < line.size() ; i++ ) {
         charIndex++;
         QChar c = line.at(i);
@@ -119,7 +103,6 @@ int GameEngine::getIntParam()
         }
         intParam.push_back(c);
     }
-//    print("intParam:" + intParam);
     int intParamValue = intParam.toInt();
     return intParamValue;
 }
