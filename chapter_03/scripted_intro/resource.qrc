@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/scripts">
         <file>demo.cbl</file>
+        <file>intro.cbl</file>
     </qresource>
 </RCC>
