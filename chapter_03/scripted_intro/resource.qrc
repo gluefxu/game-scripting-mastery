@@ -1,6 +1,12 @@
 <RCC>
-    <qresource prefix="/scripts">
-        <file>demo.cbl</file>
-        <file>intro.cbl</file>
+    <qresource prefix="/">
+        <file>gfx/copyright.bmp</file>
+        <file>gfx/title.bmp</file>
+        <file>gfx/ynh_presents.bmp</file>
+        <file>sound/ambient.wav</file>
+        <file>sound/title.wav</file>
+        <file>sound/wipe.wav</file>
+        <file>scripts/demo.cbl</file>
+        <file>scripts/intro.cbl</file>
     </qresource>
 </RCC>

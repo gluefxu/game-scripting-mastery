@@ -1,6 +1,7 @@
 #include "gameengine.h"
 #include <iostream>
 #include <QFile>
+#include <QMediaPlayer>
 
 GameEngine::GameEngine(QWidget *parent)
     : QWidget(parent)
@@ -11,6 +12,17 @@ GameEngine::GameEngine(QWidget *parent)
     println("# GameEngine");
     loadScript(":/scripts/demo.cbl"); // put file in the shadow build root directory
     runScript();
+
+    QMediaPlayer *player = new QMediaPlayer;
+//    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+//    player->setMedia(QUrl::fromLocalFile(":/sound/title.wav"));   // bad
+//    player->setMedia(QUrl::fromLocalFile("qrc:/sound/title.wav"));// bad, fromLocalFile() cannot work with resource
+//    player->setMedia(QUrl::fromLocalFile("D:/title.wav"));        // ok, but cannot use resource system
+//    player->setMedia(QUrl(":/sound/title.wav"));                  // bad
+    player->setMedia(QUrl("qrc:/sound/title.wav"));                 // ok
+    player->setVolume(20);
+    player->play();
+
 }
 
 GameEngine::~GameEngine()
