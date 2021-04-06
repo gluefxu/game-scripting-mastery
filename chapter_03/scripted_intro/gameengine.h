@@ -20,6 +20,9 @@ public:
     void drawBitmap(QString image);
     void playSound(QString sound);
     void pause(int time);
+    void foldCloseEffectX();
+    void foldCloseEffectY();
+
 
     void print(QString message, bool newLine = false);
     void println(QString message);

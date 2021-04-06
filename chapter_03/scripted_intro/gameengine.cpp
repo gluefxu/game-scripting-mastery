@@ -75,6 +75,10 @@ void GameEngine::runScript()
         } else if (command == "Pause") {
             intParam = getIntParam();
             pause(intParam);
+        } else if (command == "FoldCloseEffectY") {
+            foldCloseEffectY();
+        } else if (command == "FoldCloseEffectX") {
+            foldCloseEffectX();
         } else {
             println("!!Error Command: " + command);
         }
@@ -140,6 +144,38 @@ void GameEngine::playSound(QString sound)
     player->setVolume(5);
     player->play();
 }
+
+void GameEngine::foldCloseEffectX()
+{
+    int frameStep = 10;
+    QPainter painter(&canvas);
+    int width = canvas.width();
+    int height = canvas.height();
+    for (int i = 0; i < width / 2; ++i) {
+        painter.drawLine(i, 0, i, height);
+        painter.drawLine(width - i -1, 0, width - i -1, height);
+        update();
+        pause(frameStep);
+    }
+}
+
+void GameEngine::foldCloseEffectY()
+{
+//    int duration = 1000;
+//    int fps = 60;
+    int frameStep = 10;
+    QPainter painter(&canvas);
+    int width = canvas.width();
+    int height = canvas.height();
+    for (int i = 0; i < height / 2; ++i) {
+        painter.drawLine(0, i, width, i);
+        painter.drawLine(0, height - i -1, width, height - i -1);
+        update();
+        pause(frameStep);
+    }
+}
+
+
 
 void GameEngine::print(QString message, bool newLine)
 {
