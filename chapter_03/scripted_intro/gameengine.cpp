@@ -8,25 +8,17 @@ GameEngine::GameEngine(QWidget *parent)
 {
     script = QStringList();
     charIndex = 0;
-
-    println("# GameEngine");
-    loadScript(":/scripts/demo.cbl"); // put file in the shadow build root directory
-    runScript();
-
-    QMediaPlayer *player = new QMediaPlayer;
-//    connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
-//    player->setMedia(QUrl::fromLocalFile(":/sound/title.wav"));   // bad
-//    player->setMedia(QUrl::fromLocalFile("qrc:/sound/title.wav"));// bad, fromLocalFile() cannot work with resource
-//    player->setMedia(QUrl::fromLocalFile("D:/title.wav"));        // ok, but cannot use resource system
-//    player->setMedia(QUrl(":/sound/title.wav"));                  // bad
-    player->setMedia(QUrl("qrc:/sound/title.wav"));                 // ok
-    player->setVolume(20);
-    player->play();
-
 }
 
 GameEngine::~GameEngine()
 {
+}
+
+void GameEngine::run()
+{
+    println("# GameEngine");
+    loadScript(":/scripts/demo.cbl"); // put file in the shadow build root directory
+    runScript();
 }
 
 void GameEngine::loadScript(QString fileName)
@@ -69,6 +61,8 @@ void GameEngine::runScript()
         } else {
             println("!!Error Command: " + command);
         }
+
+        playSound("sound/title.wav");
     }
     println("# **************** runScript end ******************");
 }
@@ -117,6 +111,15 @@ int GameEngine::getIntParam()
     }
     int intParamValue = intParam.toInt();
     return intParamValue;
+}
+
+
+void GameEngine::playSound(QString fileName)
+{
+    QMediaPlayer *player = new QMediaPlayer;
+    player->setMedia(QUrl("qrc:/" + fileName));
+    player->setVolume(5);
+    player->play();
 }
 
 void GameEngine::print(QString message, bool newLine)
