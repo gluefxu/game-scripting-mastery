@@ -2,12 +2,16 @@
 #include <iostream>
 #include <QFile>
 #include <QMediaPlayer>
+#include <QPainter>
+#include <QTime>
+#include <QCoreApplication>
 
 GameEngine::GameEngine(QWidget *parent)
     : QWidget(parent)
 {
     script = QStringList();
     charIndex = 0;
+    canvas = QImage(640, 480, QImage::Format_RGB32);
 }
 
 GameEngine::~GameEngine()
@@ -16,8 +20,9 @@ GameEngine::~GameEngine()
 
 void GameEngine::run()
 {
+    resize(640, 480);
     println("# GameEngine");
-    loadScript(":/scripts/demo.cbl"); // put file in the shadow build root directory
+    loadScript(":/scripts/intro.cbl"); // put file in the shadow build root directory
     runScript();
 }
 
@@ -33,7 +38,6 @@ void GameEngine::loadScript(QString fileName)
         QString line = file.readLine();
         script << line;
     }
-
 }
 
 void GameEngine::runScript()
@@ -44,13 +48,15 @@ void GameEngine::runScript()
         line = script.at(i);
 
         QString command = getCommand();
+        QString stringParam = "";
+        int intParam = 0;
 
         if (command == "PrintString") {
-            QString stringParam = getStringParam();
+            stringParam = getStringParam();
             println(stringParam);
         } else if (command == "PrintStringLoop") {
-            QString stringParam = getStringParam();
-            int intParam = getIntParam();
+            stringParam = getStringParam();
+            intParam = getIntParam();
             for (int j = 0; j < intParam; ++j) {
                 println(stringParam);
             }
@@ -58,11 +64,20 @@ void GameEngine::runScript()
             println("");
         } else if (command == "WaitForKeyPress") {
             println("!!WaitForKeyPress");
+
+        } else if (command == "DrawBitmap") {
+            stringParam = getStringParam();
+            drawBitmap(stringParam);
+            update();
+        } else if (command == "PlaySound") {
+            stringParam = getStringParam();
+            playSound(stringParam);
+        } else if (command == "Pause") {
+            intParam = getIntParam();
+            pause(intParam);
         } else {
             println("!!Error Command: " + command);
         }
-
-        playSound("sound/title.wav");
     }
     println("# **************** runScript end ******************");
 }
@@ -113,11 +128,15 @@ int GameEngine::getIntParam()
     return intParamValue;
 }
 
+void GameEngine::drawBitmap(QString image)
+{
+    canvas.load(":/" + image);
+}
 
-void GameEngine::playSound(QString fileName)
+void GameEngine::playSound(QString sound)
 {
     QMediaPlayer *player = new QMediaPlayer;
-    player->setMedia(QUrl("qrc:/" + fileName));
+    player->setMedia(QUrl("qrc:/" + sound));
     player->setVolume(5);
     player->play();
 }
@@ -134,4 +153,24 @@ void GameEngine::print(QString message, bool newLine)
 void GameEngine::println(QString message)
 {
     print(message, true);
+}
+
+void GameEngine::pause(int time)
+{
+    QTime dieTime = QTime::currentTime().addMSecs( time );
+    while( QTime::currentTime() < dieTime )
+    {
+        QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );
+    }
+}
+
+void GameEngine::paintEvent(QPaintEvent *)
+{
+    QRectF source(0.0, 0.0, 640, 480.0);
+    QRectF target(0.0, 0.0, 640.0, 480.0);
+
+    QPainter painter(this);
+    painter.drawImage(target, canvas, source);
+
+
 }

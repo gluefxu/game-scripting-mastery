@@ -17,13 +17,22 @@ public:
     QString getCommand();
     QString getStringParam();
     int getIntParam();
-    void playSound(QString fileName);
+    void drawBitmap(QString image);
+    void playSound(QString sound);
+    void pause(int time);
 
     void print(QString message, bool newLine = false);
     void println(QString message);
+    void delay( int time );
 
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
     QStringList script;
     int charIndex;
     QString line;
+    QImage canvas;
+    bool exit;
 };
 #endif // GAMEENGINE_H
