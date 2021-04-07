@@ -27,15 +27,16 @@ public:
     void print(QString message, bool newLine = false);
     void println(QString message);
     void delay( int time );
+    bool isCode();
 
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    QStringList script;
-    int charIndex;
-    QString line;
-    QImage canvas;
+    QStringList script; // script file
+    int charIndex; // character index in a line
+    QString line; // current script line
+    QImage canvas; // image buffer
     bool exit;
 };
 #endif // GAMEENGINE_H

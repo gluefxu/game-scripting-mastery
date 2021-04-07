@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QTime>
 #include <QCoreApplication>
+#include <QDebug>
 
 GameEngine::GameEngine(QWidget *parent)
     : QWidget(parent)
@@ -22,8 +23,26 @@ void GameEngine::run()
 {
     resize(640, 480);
     println("# GameEngine");
-    loadScript(":/scripts/intro.cbl"); // put file in the shadow build root directory
-    runScript();
+    loadScript(":/scripts/npc.cbl"); // put file in the shadow build root directory
+//    runScript();
+
+    qDebug() << "hello";
+
+    for (int i = 0; i < script.size(); ++i) {
+        charIndex = 0;
+        line = script.at(i);
+        if (!isCode()) {
+            continue;
+        }
+        runScript();
+    }
+    update();
+}
+
+bool GameEngine::isCode()
+{
+    QChar c = line.at(0);
+    return !(c == "/" || c == " " || c == "\n");
 }
 
 void GameEngine::loadScript(QString fileName)
@@ -42,48 +61,51 @@ void GameEngine::loadScript(QString fileName)
 
 void GameEngine::runScript()
 {
-    println("# **************** runScript ****************");
-    for (int i = 0; i < script.size(); ++i) {
-        charIndex = 0;
-        line = script.at(i);
+    print(line);
+//    qDebug() << line;
+//    println("# **************** runScript ****************");
+//    for (int i = 0; i < script.size(); ++i) {
+//        charIndex = 0;
+//        line = script.at(i);
 
-        QString command = getCommand();
-        QString stringParam = "";
-        int intParam = 0;
+    QString command = getCommand();
+    QString stringParam = "";
+    int intParam = 0;
 
-        if (command == "PrintString") {
-            stringParam = getStringParam();
-            println(stringParam);
-        } else if (command == "PrintStringLoop") {
-            stringParam = getStringParam();
-            intParam = getIntParam();
-            for (int j = 0; j < intParam; ++j) {
-                println(stringParam);
-            }
-        } else if (command == "Newline") {
-            println("");
-        } else if (command == "WaitForKeyPress") {
-            println("!!WaitForKeyPress");
+//    if (command == "PrintString") {
+//        stringParam = getStringParam();
+//        println(stringParam);
+//    } else if (command == "PrintStringLoop") {
+//        stringParam = getStringParam();
+//        intParam = getIntParam();
+//        for (int j = 0; j < intParam; ++j) {
+//            println(stringParam);
+//        }
+//    } else if (command == "Newline") {
+//        println("");
+//    } else if (command == "WaitForKeyPress") {
+//        println("!!WaitForKeyPress");
 
-        } else if (command == "DrawBitmap") {
-            stringParam = getStringParam();
-            drawBitmap(stringParam);
-            update();
-        } else if (command == "PlaySound") {
-            stringParam = getStringParam();
-            playSound(stringParam);
-        } else if (command == "Pause") {
-            intParam = getIntParam();
-            pause(intParam);
-        } else if (command == "FoldCloseEffectY") {
-            foldCloseEffectY();
-        } else if (command == "FoldCloseEffectX") {
-            foldCloseEffectX();
-        } else {
-            println("!!Error Command: " + command);
-        }
-    }
-    println("# **************** runScript end ******************");
+//    } else if (command == "DrawBitmap") {
+//        stringParam = getStringParam();
+//        drawBitmap(stringParam);
+//        update();
+//    } else if (command == "PlaySound") {
+//        stringParam = getStringParam();
+//        playSound(stringParam);
+//    } else if (command == "Pause") {
+//        intParam = getIntParam();
+//        pause(intParam);
+//    } else if (command == "FoldCloseEffectY") {
+//        foldCloseEffectY();
+//    } else if (command == "FoldCloseEffectX") {
+//        foldCloseEffectX();
+//    } else {
+//        println("!!Error Command: " + command);
+//    }
+
+//    }
+//    println("# **************** runScript end ******************");
 }
 
 QString GameEngine::getCommand()
@@ -184,6 +206,7 @@ void GameEngine::print(QString message, bool newLine)
     } else {
         std::cout << message.toStdString();
     }
+    std::cout.flush();
 }
 
 void GameEngine::println(QString message)
