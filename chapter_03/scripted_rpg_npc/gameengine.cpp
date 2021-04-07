@@ -5,14 +5,15 @@
 #include <QPainter>
 #include <QTime>
 #include <QCoreApplication>
-#include <QDebug>
+#include <QKeyEvent>
 
 GameEngine::GameEngine(QWidget *parent)
     : QWidget(parent)
 {
-    script = QStringList();
-    charIndex = 0;
-    canvas = QImage(640, 480, QImage::Format_RGB32);
+    scriptList = QStringList();
+    lineCharIndex = 0;
+    setupImages();
+
 }
 
 GameEngine::~GameEngine()
@@ -26,11 +27,11 @@ void GameEngine::run()
     loadScript(":/scripts/npc.cbl"); // put file in the shadow build root directory
 //    runScript();
 
-    qDebug() << "hello";
+    drawBackground();
 
-    for (int i = 0; i < script.size(); ++i) {
-        charIndex = 0;
-        line = script.at(i);
+    for (int i = 0; i < scriptList.size(); ++i) {
+        lineCharIndex = 0;
+        scriptLine = scriptList.at(i);
         if (!isCode()) {
             continue;
         }
@@ -41,7 +42,7 @@ void GameEngine::run()
 
 bool GameEngine::isCode()
 {
-    QChar c = line.at(0);
+    QChar c = scriptLine.at(0);
     return !(c == "/" || c == " " || c == "\n");
 }
 
@@ -55,18 +56,14 @@ void GameEngine::loadScript(QString fileName)
 
     while (!file.atEnd()) {
         QString line = file.readLine();
-        script << line;
+        scriptList << line;
     }
 }
 
 void GameEngine::runScript()
 {
-    print(line);
-//    qDebug() << line;
+    print(scriptLine);
 //    println("# **************** runScript ****************");
-//    for (int i = 0; i < script.size(); ++i) {
-//        charIndex = 0;
-//        line = script.at(i);
 
     QString command = getCommand();
     QString stringParam = "";
@@ -111,9 +108,9 @@ void GameEngine::runScript()
 QString GameEngine::getCommand()
 {
     QString command = "";
-    for (int i = charIndex; i < line.size() ; i++ ) {
-        charIndex++;
-        QChar c = line.at(i);
+    for (int i = lineCharIndex; i < scriptLine.size() ; i++ ) {
+        lineCharIndex++;
+        QChar c = scriptLine.at(i);
         if (c == " " || c == "\n") {
             break;
         }
@@ -125,16 +122,16 @@ QString GameEngine::getCommand()
 QString GameEngine::getStringParam()
 {
     QString stringParam = "";
-    charIndex++;
-    for (int i = charIndex; i < line.size() ; i++ ) {
-        charIndex++;
-        QChar c = line.at(i);
+    lineCharIndex++;
+    for (int i = lineCharIndex; i < scriptLine.size() ; i++ ) {
+        lineCharIndex++;
+        QChar c = scriptLine.at(i);
         if (c == "\"") {
             break;
         }
         stringParam.push_back(c);
     }
-    charIndex++;
+    lineCharIndex++;
 
     return stringParam;
 }
@@ -142,9 +139,9 @@ QString GameEngine::getStringParam()
 int GameEngine::getIntParam()
 {
     QString intParam = "";
-    for (int i = charIndex; i < line.size() ; i++ ) {
-        charIndex++;
-        QChar c = line.at(i);
+    for (int i = lineCharIndex; i < scriptLine.size() ; i++ ) {
+        lineCharIndex++;
+        QChar c = scriptLine.at(i);
         if (c == " " || c == "\n") {
             break;
         }
@@ -156,7 +153,7 @@ int GameEngine::getIntParam()
 
 void GameEngine::drawBitmap(QString image)
 {
-    canvas.load(":/" + image);
+    canvasImage.load(":/" + image);
 }
 
 void GameEngine::playSound(QString sound)
@@ -170,9 +167,9 @@ void GameEngine::playSound(QString sound)
 void GameEngine::foldCloseEffectX()
 {
     int frameStep = 10;
-    QPainter painter(&canvas);
-    int width = canvas.width();
-    int height = canvas.height();
+    QPainter painter(&canvasImage);
+    int width = canvasImage.width();
+    int height = canvasImage.height();
     for (int i = 0; i < width / 2; ++i) {
         painter.drawLine(i, 0, i, height);
         painter.drawLine(width - i -1, 0, width - i -1, height);
@@ -186,9 +183,9 @@ void GameEngine::foldCloseEffectY()
 //    int duration = 1000;
 //    int fps = 60;
     int frameStep = 10;
-    QPainter painter(&canvas);
-    int width = canvas.width();
-    int height = canvas.height();
+    QPainter painter(&canvasImage);
+    int width = canvasImage.width();
+    int height = canvasImage.height();
     for (int i = 0; i < height / 2; ++i) {
         painter.drawLine(0, i, width, i);
         painter.drawLine(0, height - i -1, width, height - i -1);
@@ -229,7 +226,72 @@ void GameEngine::paintEvent(QPaintEvent *)
     QRectF target(0.0, 0.0, 640.0, 480.0);
 
     QPainter painter(this);
-    painter.drawImage(target, canvas, source);
+    painter.drawImage(target, canvasImage, source);
+}
+
+void GameEngine::keyPressEvent(QKeyEvent *event)
+{
+//    event->key() == Qt::Key_Escape
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        println("Esc");
+        break;
+    default:
+        break;
+    }
+}
+
+void GameEngine::drawBackground()
+{
+    QRect source(0, 0, 640, 480);
+    QRect target(0, 0, 640, 480);
+
+    QPainter painter(&canvasImage);
+    painter.drawImage(target, backgroundImage, source);
+
+    QRect textboxSource(0, 0, 588, 94);
+    QRect textboxTarget(26, 360, 588, 94);
+    painter.drawImage(textboxTarget, textboxImage, textboxSource);
+
+    QRect characterSource(0, 0, 48, 64);
+    QRect characterTarget(100, 100, 48, 64);
+    painter.drawImage(characterTarget, characterImage, characterSource);
+}
+
+QImage GameEngine::createMastedImage(QString fileName, QRgb maskColor)
+{
+    QImage colorImage = QImage(fileName);
+    QImage alphaImage = colorImage.createMaskFromColor(maskColor, Qt::MaskOutColor);
+    colorImage.setAlphaChannel(alphaImage);
+    return colorImage;
+}
+
+void GameEngine::setupImages()
+{
+    canvasImage = QImage(640, 480, QImage::Format_RGB32);
+    backgroundImage = QImage(":/gfx/castle_bg.bmp");
+
+    QRgb maskColor = QColor(255, 0, 255).rgb();
+
+    textboxImage = createMastedImage(":/gfx/textbox.bmp");
+
+    characterImageList = QList<QImage>();
+    QImage characterImageLeft0 = createMastedImage(":/gfx/character/left_0.bmp");
+    QImage characterImageLeft1 = createMastedImage(":/gfx/character/left_1.bmp");
+    QImage characterImageRight0 = createMastedImage(":/gfx/character/right.bmp");
+    QImage characterImageRight1 = createMastedImage(":/gfx/character/left_0.bmp");
+    QImage characterImageUp0 = createMastedImage(":/gfx/character/left_0.bmp");
+    QImage characterImageUp1 = createMastedImage(":/gfx/character/left_0.bmp");
+    QImage characterImageDown0 = createMastedImage(":/gfx/character/left_0.bmp");
+    QImage characterImageDown1 = createMastedImage(":/gfx/character/left_0.bmp");
 
 
+    QStringList images = { "left_0", "left_1", "right_0", "right_1", "up_0", "up_1", "down_0", "down_1" };
+    for (int i = 0; i < images.size(); ++i) {
+        QString imageName = images.at(i);
+        QImage tmpImage = createMastedImage(":/gfx/character/" + imageName + ".bmp");
+        characterImageList.append(tmpImage);
+    }
+
+    characterImage = characterImageList.at(0);
 }
