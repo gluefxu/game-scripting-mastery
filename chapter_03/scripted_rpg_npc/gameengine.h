@@ -2,6 +2,7 @@
 #define GAMEENGINE_H
 
 #include <QWidget>
+#include "character.h"
 
 class GameEngine : public QWidget
 {
@@ -49,6 +50,7 @@ private:
     void restartScript();
     void showTextBox(QString message);
     void hideTextBox();
+    void moveChar(int mx, int my);
 
     void quitGame();
 
@@ -66,5 +68,7 @@ private:
 
     QString textBoxMessage;
     bool isTextBoxActive;
+
+    Character *npc;
 };
 #endif // GAMEENGINE_H

@@ -16,15 +16,27 @@ GameEngine::GameEngine(QWidget *parent)
     scriptList = QStringList();
     lineCharIndex = 0;
     isExit = false;
-    setupImages();
+
 
 //    setAttribute(Qt::WA_QuitOnClose);
     textBoxMessage = "";
     isTextBoxActive = false;
+    npc = new Character(320, 240);
+    npc->imageWidth = 48;
+    npc->imageHeight = 64;
+    npc->direction = 3;
+//    npc->animationFrame = 1;
+
+    setupImages();
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    timer->start(100);
 }
 
 GameEngine::~GameEngine()
 {
+    delete npc;
 }
 
 void GameEngine::run()
@@ -83,6 +95,7 @@ void GameEngine::runScript()
     QString command = getCommand();
     QString stringParam = "";
     int intParam = 0;
+    int intParam2 = 0;
 
     if (command == "PrintString") {
         stringParam = getStringParam();
@@ -120,6 +133,27 @@ void GameEngine::runScript()
     } else if (command == "HideTextBox") {
         hideTextBox();
         update();
+    } else if (command == "SetCharDir") {
+        stringParam = getStringParam();
+        if (stringParam == "Left") {
+            npc->direction = 0;
+        } else if (stringParam == "Right") {
+            npc->direction = 1;
+        } else if (stringParam == "Up") {
+            npc->direction = 2;
+        } else {
+            npc->direction = 3;
+        }
+        update();
+    }  else if (command == "MoveChar") {
+        intParam = getIntParam();
+        intParam2 = getIntParam();
+//        npc->posX += intParam;
+//        npc->posY += intParam2;
+//        println(QString::number(intParam) + ", " + QString::number(intParam2));
+//        update();
+//        pause(1000);
+        moveChar(intParam, intParam2);
     } else {
 //        println("!!Error Command: " + command);
     }
@@ -236,7 +270,7 @@ void GameEngine::println(QString message)
 
 void GameEngine::pause(int time)
 {
-    println("--- pause start");
+//    println("--- pause start");
     QTime dieTime = QTime::currentTime().addMSecs( time );
     while( QTime::currentTime() < dieTime )
     {
@@ -249,7 +283,7 @@ void GameEngine::pause(int time)
         }
         QCoreApplication::processEvents( QEventLoop::AllEvents, 1000 );
     }
-    println("--- pause end");
+//    println("--- pause end");
 }
 
 void GameEngine::paintEvent(QPaintEvent *)
@@ -287,10 +321,10 @@ void GameEngine::drawGame()
     QPainter painter(&canvasImage);
     painter.drawImage(backgroundTarget, backgroundImage, backgroundSource);
 
-    QRect characterSource(0, 0, 48, 64);
-    QRect characterTarget(100, 100, 48, 64);
+    QRect characterSource(0, 0, npc->imageWidth, npc->imageHeight);
+    QRect characterTarget(npc->posX - (npc->imageWidth * 0.5), npc->posY - (npc->imageHeight * 0.5), npc->imageWidth, npc->imageHeight);
 
-    painter.drawImage(characterTarget, characterImage, characterSource);
+    painter.drawImage(characterTarget, npc->currentImage(), characterSource);
 
     if (isTextBoxActive) {
         QRect textboxSource(0, 0, 588, 94);
@@ -332,15 +366,18 @@ void GameEngine::setupImages()
     QImage characterImageDown0 = createMastedImage(":/gfx/character/left_0.bmp");
     QImage characterImageDown1 = createMastedImage(":/gfx/character/left_0.bmp");
 
-
+    // -x --> x, -y --> y
     QStringList images = { "left_0", "left_1", "right_0", "right_1", "up_0", "up_1", "down_0", "down_1" };
     for (int i = 0; i < images.size(); ++i) {
         QString imageName = images.at(i);
         QImage tmpImage = createMastedImage(":/gfx/character/" + imageName + ".bmp");
         characterImageList.append(tmpImage);
+        npc->imageList.append(tmpImage);
     }
 
     characterImage = characterImageList.at(0);
+
+//    npc->imageList =
 }
 
 void GameEngine::restartScript()
@@ -364,4 +401,22 @@ void GameEngine::hideTextBox()
 void GameEngine::quitGame()
 {
     qApp->quit();
+}
+
+void GameEngine::moveChar(int mx, int my)
+{
+    int duration = 1000; //ms
+    int times = 10; // time of draw loop
+    float posX = npc->posX;
+    float posY = npc->posY;
+    float stepX = mx / (float)times;
+    float stepY = my / (float)times;
+    for (int i = 0; i < times; ++i) {
+        posX += stepX;
+        posY += stepY;
+        npc->posX = (int)posX;
+        npc->posY = (int)posY;
+        update();
+        pause(100);
+    }
 }
