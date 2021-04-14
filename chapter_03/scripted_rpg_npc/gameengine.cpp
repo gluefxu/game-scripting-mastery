@@ -6,14 +6,21 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QKeyEvent>
+#include <QEvent>
+#include <QTimer>
 
 GameEngine::GameEngine(QWidget *parent)
     : QWidget(parent)
 {
+    scriptLineIndex = 0;
     scriptList = QStringList();
     lineCharIndex = 0;
+    isExit = false;
     setupImages();
 
+//    setAttribute(Qt::WA_QuitOnClose);
+    textBoxMessage = "";
+    isTextBoxActive = false;
 }
 
 GameEngine::~GameEngine()
@@ -27,9 +34,15 @@ void GameEngine::run()
     loadScript(":/scripts/npc.cbl"); // put file in the shadow build root directory
 //    runScript();
 
-    drawBackground();
+    drawGame();
 
     for (int i = 0; i < scriptList.size(); ++i) {
+        if (isExit) {
+            println("run exit end");
+//            this->close();
+//            qApp->quit();
+            break;
+        }
         lineCharIndex = 0;
         scriptLine = scriptList.at(i);
         if (!isCode()) {
@@ -37,7 +50,9 @@ void GameEngine::run()
         }
         runScript();
     }
-    update();
+    println("run end loop");
+//    update();
+    qApp->quit();
 }
 
 bool GameEngine::isCode()
@@ -62,44 +77,52 @@ void GameEngine::loadScript(QString fileName)
 
 void GameEngine::runScript()
 {
-    print(scriptLine);
+//    print(scriptLine);
 //    println("# **************** runScript ****************");
 
     QString command = getCommand();
     QString stringParam = "";
     int intParam = 0;
 
-//    if (command == "PrintString") {
-//        stringParam = getStringParam();
-//        println(stringParam);
-//    } else if (command == "PrintStringLoop") {
-//        stringParam = getStringParam();
-//        intParam = getIntParam();
-//        for (int j = 0; j < intParam; ++j) {
-//            println(stringParam);
-//        }
-//    } else if (command == "Newline") {
-//        println("");
-//    } else if (command == "WaitForKeyPress") {
-//        println("!!WaitForKeyPress");
+    if (command == "PrintString") {
+        stringParam = getStringParam();
+        println(stringParam);
+    } else if (command == "PrintStringLoop") {
+        stringParam = getStringParam();
+        intParam = getIntParam();
+        for (int j = 0; j < intParam; ++j) {
+            println(stringParam);
+        }
+    } else if (command == "Newline") {
+        println("");
+    } else if (command == "WaitForKeyPress") {
+        println("!!WaitForKeyPress");
 
-//    } else if (command == "DrawBitmap") {
-//        stringParam = getStringParam();
-//        drawBitmap(stringParam);
-//        update();
-//    } else if (command == "PlaySound") {
-//        stringParam = getStringParam();
-//        playSound(stringParam);
-//    } else if (command == "Pause") {
-//        intParam = getIntParam();
-//        pause(intParam);
-//    } else if (command == "FoldCloseEffectY") {
-//        foldCloseEffectY();
-//    } else if (command == "FoldCloseEffectX") {
-//        foldCloseEffectX();
-//    } else {
+    } else if (command == "DrawBitmap") {
+        stringParam = getStringParam();
+        drawBitmap(stringParam);
+        update();
+    } else if (command == "PlaySound") {
+        stringParam = getStringParam();
+        playSound(stringParam);
+    } else if (command == "Pause") {
+        intParam = getIntParam();
+        pause(intParam);
+    } else if (command == "FoldCloseEffectY") {
+        foldCloseEffectY();
+    } else if (command == "FoldCloseEffectX") {
+        foldCloseEffectX();
+    } else if (command == "ShowTextBox") {
+        stringParam = getStringParam();
+//        println(stringParam);
+        showTextBox(stringParam);
+        update();
+    } else if (command == "HideTextBox") {
+        hideTextBox();
+        update();
+    } else {
 //        println("!!Error Command: " + command);
-//    }
+    }
 
 //    }
 //    println("# **************** runScript end ******************");
@@ -213,15 +236,26 @@ void GameEngine::println(QString message)
 
 void GameEngine::pause(int time)
 {
+    println("--- pause start");
     QTime dieTime = QTime::currentTime().addMSecs( time );
     while( QTime::currentTime() < dieTime )
     {
-        QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );
+        if (isExit) {
+            println("pause end");
+//            qApp->quit();
+//            QEvent *e = new QEvent(QEvent::Close);
+//            QCoreApplication::sendEvent(this, e);
+            break;
+        }
+        QCoreApplication::processEvents( QEventLoop::AllEvents, 1000 );
     }
+    println("--- pause end");
 }
 
 void GameEngine::paintEvent(QPaintEvent *)
 {
+    drawGame();
+
     QRectF source(0.0, 0.0, 640, 480.0);
     QRectF target(0.0, 0.0, 640.0, 480.0);
 
@@ -234,28 +268,41 @@ void GameEngine::keyPressEvent(QKeyEvent *event)
 //    event->key() == Qt::Key_Escape
     switch (event->key()) {
     case Qt::Key_Escape:
-        println("Esc");
+        println("!!!Quit");
+        isExit = true;
+//        this->close();
+        qApp->quit();
+//        QTimer::singleShot(2000, qApp, SLOT(quit));
         break;
     default:
         break;
     }
 }
 
-void GameEngine::drawBackground()
+void GameEngine::drawGame()
 {
-    QRect source(0, 0, 640, 480);
-    QRect target(0, 0, 640, 480);
+    QRect backgroundSource(0, 0, 640, 480);
+    QRect backgroundTarget(0, 0, 640, 480);
 
     QPainter painter(&canvasImage);
-    painter.drawImage(target, backgroundImage, source);
-
-    QRect textboxSource(0, 0, 588, 94);
-    QRect textboxTarget(26, 360, 588, 94);
-    painter.drawImage(textboxTarget, textboxImage, textboxSource);
+    painter.drawImage(backgroundTarget, backgroundImage, backgroundSource);
 
     QRect characterSource(0, 0, 48, 64);
     QRect characterTarget(100, 100, 48, 64);
+
     painter.drawImage(characterTarget, characterImage, characterSource);
+
+    if (isTextBoxActive) {
+        QRect textboxSource(0, 0, 588, 94);
+        QRect textboxTarget(26, 360, 588, 94);
+        painter.drawImage(textboxTarget, textboxImage, textboxSource);
+
+        QRect textRect = QRect(26 + 20, 360 + 20, 588 - 40, 94 - 40);
+
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 16));
+        painter.drawText(textRect, Qt::TextWordWrap, textBoxMessage);
+    }
 }
 
 QImage GameEngine::createMastedImage(QString fileName, QRgb maskColor)
@@ -294,4 +341,27 @@ void GameEngine::setupImages()
     }
 
     characterImage = characterImageList.at(0);
+}
+
+void GameEngine::restartScript()
+{
+    scriptLineIndex = 0;
+    scriptLine = scriptList[0];
+}
+
+void GameEngine::showTextBox(QString message)
+{
+    isTextBoxActive = true;
+    textBoxMessage = message;
+}
+
+void GameEngine::hideTextBox()
+{
+    isTextBoxActive = false;
+    textBoxMessage = "";
+}
+
+void GameEngine::quitGame()
+{
+    qApp->quit();
 }

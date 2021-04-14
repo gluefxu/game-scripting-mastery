@@ -42,18 +42,29 @@ private:
     void print(QString message, bool newLine = false);
     void println(QString message);
     bool isCode(); // is current line code statement
-    void drawBackground();
+    void drawGame();
     QImage createMastedImage(QString fileName, QRgb maskColor=QColor(255, 0, 255).rgb());
     void setupImages();
 
+    void restartScript();
+    void showTextBox(QString message);
+    void hideTextBox();
+
+    void quitGame();
+
     QStringList scriptList; // script file
+    int scriptLineIndex; // index of the current script line
     QString scriptLine; // current script line
     int lineCharIndex; // character index in a line
+
     QImage canvasImage; // image buffer
     QImage backgroundImage;
     QImage textboxImage;
     QImage characterImage;
     QList<QImage> characterImageList;
     bool isExit;
+
+    QString textBoxMessage;
+    bool isTextBoxActive;
 };
 #endif // GAMEENGINE_H

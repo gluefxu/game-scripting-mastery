@@ -9,6 +9,5 @@ int main(int argc, char *argv[])
     g.show();
     g.run();
 
-
     return a.exec();
 }
